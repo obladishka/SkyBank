@@ -45,3 +45,16 @@ def get_currencies(currencies_file: str) -> list:
         print("Файл не найден. Проверьте правильность введенных данных.")
         return []
 
+
+def get_stocks(stocks_file: str) -> list:
+    """Функция для получения списка тикеров компаний S&P 500."""
+    try:
+        with open(stocks_file, "r", encoding="utf-8") as sf:
+            try:
+                companies = json.load(sf)
+                return [company.get("tickerSymbol") for company in companies]
+            except json.JSONDecodeError:
+                return []
+    except FileNotFoundError:
+        print("Файл не найден. Проверьте правильность введенных данных.")
+        return []
