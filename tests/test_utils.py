@@ -1,20 +1,55 @@
+import tempfile
 from unittest.mock import patch
 
-from src.utils import get_data_from_xlsx
+from src.utils import get_currencies, get_data_from_xlsx
 
 
 @patch("src.utils.pd.read_excel")
 def test_get_data_from_xlsx(mock_read_excel, get_df):
-    """Tests normal work of get_data_from_xlsx function."""
+    """Тестирует нормальную работу функции."""
     mock_read_excel.return_value = get_df
     assert get_data_from_xlsx("existing.xlsx").equals(get_df)
     mock_read_excel.assert_called_once_with("existing.xlsx")
 
 
 def test_get_data_from_xlsx_no_such_file(get_empty_df, capsys):
-    """Tests get_get_data_from_xlsx function when an Excel-file does not exist."""
+    """Тестирует работу функции, когда Excel-файл не найден."""
     file_name = "no_such_file.xlsx"
     get_data_from_xlsx(file_name)
     captured = capsys.readouterr()
     assert captured.out == "Файл не найден. Проверьте правильность введенных данных.\n"
     assert get_data_from_xlsx(file_name).equals(get_empty_df)
+
+
+@patch("src.utils.json.load")
+@patch("src.utils.open")
+def test_get_currencies(mock_open, mock_json_load, currencies):
+    """Тестирует нормальную работу функции."""
+    mock_json_load.return_value = currencies
+    assert get_currencies("currencies.json") == ["USD", "EUR", "CNY", "JPY", "KZT"]
+    mock_open.assert_called_once_with("currencies.json", "r", encoding="utf-8")
+
+
+def test_get_currencies_no_such_file(capsys):
+    """Тестирует работу функции, когда файл не найден."""
+    file_name = "no_such_file.json"
+    assert get_currencies(file_name) == []
+    captured = capsys.readouterr()
+    assert captured.out == "Файл не найден. Проверьте правильность введенных данных.\n"
+
+
+def test_get_currencies_json_decode_error():
+    """Тестирует работу функции при возникновении ошибки декодирования."""
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as tmp_file:
+        data = """{
+            "symbol": "KZT",
+            "name": {"Kazakhstani Tenge"},
+            "symbol_native": "тңг.",
+            "decimal_digits": 2,
+            "rounding": 0,
+            "code": "KZT",
+            "name_plural": "Kazakhstani tenges"
+        }"""
+        tmp_file.write(data)
+        file_path = tmp_file.name
+    assert get_currencies(file_path) == []
