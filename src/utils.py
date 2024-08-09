@@ -58,3 +58,25 @@ def get_stocks(stocks_file: str) -> list:
     except FileNotFoundError:
         print("Файл не найден. Проверьте правильность введенных данных.")
         return []
+
+
+def get_data_from_user(user_currencies: str, user_stocks: str) -> None | str:
+    """Функция для записи пользовательских настроек в файл."""
+
+    file_path = os.path.dirname(os.path.dirname(__file__))
+
+    codes = get_currencies(os.path.join(file_path, "data", "currencies.json"))
+    symbols = get_stocks(os.path.join(file_path, "data", "sandp500.json"))
+
+    user_currencies = user_currencies.upper().replace(",", " ").replace("  ", " ").split()
+    user_stocks = user_stocks.upper().replace(",", " ").replace("  ", " ").split()
+
+    if any(currency not in codes for currency in user_currencies) or any(
+        stock not in symbols for stock in user_stocks
+    ):
+        return "Проверьте правильность введенных данных."
+
+    # Вносим пользовательские данные в файл
+    with open(os.path.join(file_path, "user_settings.json"), "w", encoding="utf-8") as of:
+        user_settings = {"user_currencies": user_currencies, "user_stocks": user_stocks}
+        json.dump(user_settings, of)
