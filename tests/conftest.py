@@ -46,3 +46,65 @@ def get_empty_df() -> pd.DataFrame:
         "Сумма операции с округлением": [np.nan],
     }
     return pd.DataFrame(data)
+
+
+@pytest.fixture
+def currencies() -> list[dict[str, str | int]]:
+    return [
+        {
+            "symbol": "$",
+            "name": "US Dollar",
+            "symbol_native": "$",
+            "decimal_digits": 2,
+            "rounding": 0,
+            "code": "USD",
+            "name_plural": "US dollars",
+        },
+        {
+            "symbol": "€",
+            "name": "Euro",
+            "symbol_native": "€",
+            "decimal_digits": 2,
+            "rounding": 0,
+            "code": "EUR",
+            "name_plural": "euros",
+        },
+        {
+            "symbol": "CN¥",
+            "name": "Chinese Yuan",
+            "symbol_native": "CN¥",
+            "decimal_digits": 2,
+            "rounding": 0,
+            "code": "CNY",
+            "name_plural": "Chinese yuan",
+        },
+        {
+            "symbol": "¥",
+            "name": "Japanese Yen",
+            "symbol_native": "￥",
+            "decimal_digits": 0,
+            "rounding": 0,
+            "code": "JPY",
+            "name_plural": "Japanese yen",
+        },
+        {
+            "symbol": "KZT",
+            "name": "Kazakhstani Tenge",
+            "symbol_native": "тңг.",
+            "decimal_digits": 2,
+            "rounding": 0,
+            "code": "KZT",
+            "name_plural": "Kazakhstani tenges",
+        },
+    ]
+
+
+@pytest.fixture
+def stocks() -> list[dict[str, str]]:
+    return [
+        {"company": "Apple Inc", "tickerSymbol": "AAPL"},
+        {"company": "Amazon.com Inc", "tickerSymbol": "AMZN"},
+        {"company": "Alphabet Inc Cl A", "tickerSymbol": "GOOGL"},
+        {"company": "Microsoft Corp", "tickerSymbol": "MSFT"},
+        {"company": "Tesla Inc", "tickerSymbol": "TSLA"},
+    ]
