@@ -164,3 +164,49 @@ def api_response_currencies() -> dict:
             },
         },
     }
+
+
+@pytest.fixture
+def api_response_stocks() -> list[dict]:
+    return [
+        {
+            "symbol": "AAPL",
+            "name": "Apple Inc.",
+            "price": 216.24,
+            "exchange": "NASDAQ Global Select",
+            "exchangeShortName": "NASDAQ",
+            "type": "stock",
+        },
+        {
+            "symbol": "AMZN",
+            "name": "Amazon.com, Inc.",
+            "price": 166.94,
+            "exchange": "NASDAQ Global Select",
+            "exchangeShortName": "NASDAQ",
+            "type": "stock",
+        },
+        {
+            "symbol": "GOOGL",
+            "name": "Alphabet Inc.",
+            "price": 163.67,
+            "exchange": "NASDAQ Global Select",
+            "exchangeShortName": "NASDAQ",
+            "type": "stock",
+        },
+        {
+            "symbol": "MSFT",
+            "name": "Microsoft Corporation",
+            "price": 406.02,
+            "exchange": "NASDAQ Global Select",
+            "exchangeShortName": "NASDAQ",
+            "type": "stock",
+        },
+        {
+            "symbol": "TSLA",
+            "name": "Tesla, Inc.",
+            "price": 200,
+            "exchange": "NASDAQ Global Select",
+            "exchangeShortName": "NASDAQ",
+            "type": "stock",
+        },
+    ]
