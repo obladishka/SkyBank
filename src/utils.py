@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 import numpy as np
@@ -6,13 +7,26 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 
+log_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs", "utils.log")
+
+logger = logging.getLogger("utils")
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler(log_file_path, mode="w")
+file_formatter = logging.Formatter("%(asctime)s %(filename)s %(levelname)s: %(message)s")
+
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+
 
 def get_data_from_xlsx(file_path: str) -> pd.DataFrame | None:
     """Функция для считывания инфы из excel-файла."""
     try:
+        logger.info(f"Trying to read info form {file_path}")
         df = pd.read_excel(file_path)
+        logger.info("Successful operation")
         return df
-    except FileNotFoundError:
+    except FileNotFoundError as ex:
+        logger.error(ex)
         print("Файл не найден. Проверьте правильность введенных данных.")
         data = {
             "Дата операции": [np.nan],
@@ -37,13 +51,18 @@ def get_data_from_xlsx(file_path: str) -> pd.DataFrame | None:
 def get_currencies(currencies_file: str) -> list:
     """Функция для получения списка существующих валют."""
     try:
+        logger.info(f"Trying to open a file {currencies_file}")
         with open(currencies_file, "r", encoding="utf-8") as cf:
             try:
+                logger.info("Trying to deserialize file data")
                 currencies = json.load(cf)
+                logger.info("Data deserialized successfully")
                 return [currency.get("code") for currency in currencies]
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as ex:
+                logger.error(ex)
                 return []
-    except FileNotFoundError:
+    except FileNotFoundError as ex:
+        logger.error(ex)
         print("Файл не найден. Проверьте правильность введенных данных.")
         return []
 
@@ -51,13 +70,18 @@ def get_currencies(currencies_file: str) -> list:
 def get_stocks(stocks_file: str) -> list:
     """Функция для получения списка тикеров компаний S&P 500."""
     try:
+        logger.info(f"Trying to open a file {stocks_file}")
         with open(stocks_file, "r", encoding="utf-8") as sf:
             try:
+                logger.info("Trying to deserialize file data")
                 companies = json.load(sf)
+                logger.info("Data deserialized successfully")
                 return [company.get("tickerSymbol") for company in companies]
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as ex:
+                logger.error(ex)
                 return []
-    except FileNotFoundError:
+    except FileNotFoundError as ex:
+        logger.error(ex)
         print("Файл не найден. Проверьте правильность введенных данных.")
         return []
 
@@ -67,18 +91,32 @@ def get_data_from_user(user_currencies: str, user_stocks: str) -> None | str:
 
     file_path = os.path.dirname(os.path.dirname(__file__))
 
+    logger.info("Getting codes and symbols lists")
     codes = get_currencies(os.path.join(file_path, "data", "currencies.json"))
     symbols = get_stocks(os.path.join(file_path, "data", "sandp500.json"))
 
+    if not codes or not symbols:
+        logger.warning(
+            f"Failed to get data about {'codes and symbols' if not codes and not symbols else 'codes ' if not codes
+                                        else 'symbols'}"
+        )
+
+    logger.info("Getting user preferences")
     user_currencies = user_currencies.upper().replace(",", " ").replace("  ", " ").split()
     user_stocks = user_stocks.upper().replace(",", " ").replace("  ", " ").split()
 
+    logger.info("Checking if user preferences are valid")
     if any(currency not in codes for currency in user_currencies) or any(
         stock not in symbols for stock in user_stocks
     ):
+        logger.warning(
+            f"{'Currencies and stocks' if any(currency not in codes for currency in user_currencies) and
+                any(stock not in symbols for stock in user_stocks) else 'Currencies'
+                if any(currency not in codes for currency in user_currencies) else 'Stocks'} are invalid"
+        )
         return "Проверьте правильность введенных данных."
 
-    # Вносим пользовательские данные в файл
+    logger.info("Writing user settings into file.")
     with open(os.path.join(file_path, "user_settings.json"), "w", encoding="utf-8") as of:
         user_settings = {"user_currencies": user_currencies, "user_stocks": user_stocks}
         json.dump(user_settings, of)
@@ -88,18 +126,23 @@ def get_data_via_api_currencies(currencies: list[str]) -> tuple:
     """Функция для получения текущего курса валют."""
     url = "https://www.cbr-xml-daily.ru/daily_json.js"
 
+    logger.info("Trying to get current currencies rates.")
     try:
         response = requests.get(url)
         status_code = response.status_code
 
         if status_code == 200:
+            logger.info("Current currencies rates got successfully.")
             currencies_data = response.json()["Valute"]
             currencies_rates = [currencies_data.get(currency, {}).get("Value") for currency in currencies]
+            logger.info(f"Returning rates for user's currencies: {currencies}.")
             return True, list(map(lambda x: round(x, 2), currencies_rates))
 
+        logger.warning(f"Operation failed. Reason: {response.reason}")
         return False, str(response.reason)
 
     except requests.exceptions.RequestException as ex:
+        logger.error(ex)
         return False, str(ex)
 
 
@@ -109,16 +152,21 @@ def get_data_via_api_stocks(stocks: list[str]) -> tuple:
 
     url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={os.getenv("API_KEY")}"
 
+    logger.info("Trying to get stocks list.")
     try:
         response = requests.get(url)
         status_code = response.status_code
 
         if status_code == 200:
+            logger.info("Stocks list got successfully.")
             stocks_data = response.json()
             stocks_prices = [i.get("price") for i in stocks_data for stock in stocks if i.get("symbol") == stock]
+            logger.info(f"Returning prices of user's stocks: {stocks}.")
             return True, stocks_prices
 
+        logger.warning(f"Operation failed. Reason: {response.reason}")
         return False, str(response.reason)
 
     except requests.exceptions.RequestException as ex:
+        logger.error(ex)
         return False, str(ex)
