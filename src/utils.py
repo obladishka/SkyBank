@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -48,12 +49,48 @@ def get_data_from_xlsx(file_path: str) -> pd.DataFrame | None:
         return pd.DataFrame(data)
 
 
+def filter_by_date(current_date: str, df: pd.DataFrame) -> pd.DataFrame:
+    """Функция для фильтрации операций с начала месяца по текущую дату."""
+    try:
+        logger.info("Getting start and end date")
+        end_date = datetime.strptime(current_date, "%d.%m.%Y %H:%M:%S")
+        start_time = datetime.strptime(f"01.{end_date.month}.{end_date.year} 00:00:00", "%d.%m.%Y %H:%M:%S")
+
+        logger.info("Formatting dates in df")
+        df["date"] = df["Дата операции"].map(lambda x: datetime.strptime(str(x), "%d.%m.%Y %H:%M:%S"))
+        logger.info(f"Getting operations from {start_time} to {end_date}")
+        return df[(df["date"] >= start_time) & (df["date"] <= end_date)]
+
+    except ValueError as ex:
+        logger.error(ex)
+        print("Неправильный формат даты. Введите дату в формате DD.MM.YY HH:MM:SS")
+        data = {
+            "Дата операции": [np.nan],
+            "Дата платежа": [np.nan],
+            "Номер карты": [np.nan],
+            "Статус": [np.nan],
+            "Сумма операции": [np.nan],
+            "Валюта операции": [np.nan],
+            "Сумма платежа": [np.nan],
+            "Валюта платежа": [np.nan],
+            "Кэшбэк": [np.nan],
+            "Категория": [np.nan],
+            "MCC": [np.nan],
+            "Описание": [np.nan],
+            "Бонусы (включая кэшбэк)": [np.nan],
+            "Округление на инвесткопилку": [np.nan],
+            "Сумма операции с округлением": [np.nan],
+        }
+        return pd.DataFrame(data)
+
+
 def get_total_expenses(df: pd.DataFrame) -> dict[str, float]:
     """Функция для получения общей суммы расходов по каждой карте."""
+    df_copy = df.loc[::]
     logger.info("Formating card numbers")
-    df["Formated card numbers"] = df["Номер карты"].map(lambda x: str(x).replace("*", ""))
+    df_copy["Formated card numbers"] = df_copy["Номер карты"].map(lambda x: str(x).replace("*", ""))
     logger.info("Grouping operations by card numbers")
-    grouped_data = df.groupby("Formated card numbers")["Сумма платежа"].sum().map(lambda x: -x if x < 0 else x)
+    grouped_data = df_copy.groupby("Formated card numbers")["Сумма платежа"].sum().map(lambda x: -x if x < 0 else x)
     logger.info("Returning result in a form of dict")
     return grouped_data.to_dict()
 
