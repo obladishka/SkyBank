@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import pandas as pd
+import requests
 
 
 def get_data_from_xlsx(file_path: str) -> pd.DataFrame | None:
@@ -80,3 +81,22 @@ def get_data_from_user(user_currencies: str, user_stocks: str) -> None | str:
     with open(os.path.join(file_path, "user_settings.json"), "w", encoding="utf-8") as of:
         user_settings = {"user_currencies": user_currencies, "user_stocks": user_stocks}
         json.dump(user_settings, of)
+
+
+def get_data_via_api_currencies(currencies: list[str]) -> tuple:
+    """Функция для получения текущего курса валют."""
+    url = "https://www.cbr-xml-daily.ru/daily_json.js"
+
+    try:
+        response = requests.get(url)
+        status_code = response.status_code
+
+        if status_code == 200:
+            currencies_data = response.json()["Valute"]
+            currencies_rates = [currencies_data.get(currency, {}).get("Value") for currency in currencies]
+            return True, list(map(lambda x: round(x, 2), currencies_rates))
+
+        return False, str(response.reason)
+
+    except requests.exceptions.RequestException as ex:
+        return False, str(ex)
