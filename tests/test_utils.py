@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.utils import get_currencies, get_data_from_user, get_data_from_xlsx
+from src.utils import get_currencies, get_data_from_user, get_data_from_xlsx, get_stocks
 
 
 @patch("src.utils.pd.read_excel")
@@ -55,6 +55,32 @@ def test_get_currencies_json_decode_error():
         tmp_file.write(data)
         file_path = tmp_file.name
     assert get_currencies(file_path) == []
+
+
+@patch("src.utils.json.load")
+@patch("src.utils.open")
+def test_get_stocks(mock_open, mock_json_load, stocks):
+    """Тестирует нормальную работу функции."""
+    mock_json_load.return_value = stocks
+    assert get_stocks("stocks.json") == ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
+    mock_open.assert_called_once_with("stocks.json", "r", encoding="utf-8")
+
+
+def test_get_stocks_no_such_file(capsys):
+    """Тестирует работу функции, когда файл не найден."""
+    file_name = "no_such_file.json"
+    assert get_stocks(file_name) == []
+    captured = capsys.readouterr()
+    assert captured.out == "Файл не найден. Проверьте правильность введенных данных.\n"
+
+
+def test_get_stocks_json_decode_error():
+    """Тестирует работу функции при возникновении ошибки декодирования."""
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as tmp_file:
+        data = "company: Apple Inc, tickerSymbol: AAPL"
+        tmp_file.write(data)
+        file_path = tmp_file.name
+    assert get_stocks(file_path) == []
 
 
 @pytest.mark.parametrize(
