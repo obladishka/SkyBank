@@ -1,9 +1,11 @@
 import tempfile
+from unittest import mock
 from unittest.mock import patch
 
 import pytest
+import requests
 
-from src.utils import get_currencies, get_data_from_user, get_data_from_xlsx, get_stocks
+from src.utils import get_currencies, get_data_from_user, get_data_from_xlsx, get_data_via_api_currencies, get_stocks
 
 
 @patch("src.utils.pd.read_excel")
@@ -132,3 +134,28 @@ def test_get_data_from_user_wrong_data(mock_get_currencies, mock_get_stocks, inp
     mock_get_currencies.return_value = ["USD", "EUR", "CNY", "JPY", "KZT"]
     mock_get_stocks.return_value = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
     assert get_data_from_user(input_currencies, input_stocks) == "Проверьте правильность введенных данных."
+
+
+@patch("src.utils.requests.get")
+def test_get_data_via_api_currencies(mock_get, api_response_currencies):
+    """Тестирует нормальную работу функции."""
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = api_response_currencies
+    result = get_data_via_api_currencies(["USD", "EUR", "CNY", "JPY", "KZT"])
+    assert result == (True, [87.99, 95.18, 11.89, 59.64, 18.44])
+
+
+@patch("src.utils.requests.get")
+def test_get_data_via_api_currencies_denied_request(mock_get):
+    """Тестирует работу функции, когда запрос был заблокирован."""
+    mock_get.return_value.status_code = 403
+    mock_get.return_value.reason = "Forbidden"
+    result = get_data_via_api_currencies(["USD", "EUR", "CNY", "JPY", "KZT"])
+    assert result == (False, "Forbidden")
+
+
+def test_get_data_via_api_currencies_request_error():
+    """Тестирует работу функции при возникновении ошибки."""
+    with mock.patch("requests.get", side_effect=requests.exceptions.RequestException("Something went wrong")):
+        result = get_data_via_api_currencies(["USD", "EUR", "CNY", "JPY", "KZT"])
+    assert result == (False, "Something went wrong")
