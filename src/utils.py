@@ -95,6 +95,15 @@ def get_total_expenses(df: pd.DataFrame) -> dict[str, float]:
     return grouped_data.to_dict()
 
 
+def calculate_cashback(operations_dict: dict) -> dict:
+    """Функция, считающая кэшбэк (1 рубль на каждые 100 рублей)."""
+    for key, value in operations_dict.items():
+        cash_back = round(value / 100, 2)
+        operations_dict[key] = [value]
+        operations_dict[key].append(cash_back)
+    return operations_dict
+
+
 def get_currencies(currencies_file: str) -> list:
     """Функция для получения списка существующих валют."""
     try:
