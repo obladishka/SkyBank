@@ -48,6 +48,16 @@ def get_data_from_xlsx(file_path: str) -> pd.DataFrame | None:
         return pd.DataFrame(data)
 
 
+def get_total_expenses(df: pd.DataFrame) -> dict[str, float]:
+    """Функция для получения общей суммы расходов по каждой карте."""
+    logger.info("Formating card numbers")
+    df["Formated card numbers"] = df["Номер карты"].map(lambda x: str(x).replace("*", ""))
+    logger.info("Grouping operations by card numbers")
+    grouped_data = df.groupby("Formated card numbers")["Сумма платежа"].sum().map(lambda x: -x if x < 0 else x)
+    logger.info("Returning result in a form of dict")
+    return grouped_data.to_dict()
+
+
 def get_currencies(currencies_file: str) -> list:
     """Функция для получения списка существующих валют."""
     try:
