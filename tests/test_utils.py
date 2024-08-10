@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from src.utils import (get_currencies, get_data_from_user, get_data_from_xlsx, get_data_via_api_currencies,
-                       get_data_via_api_stocks, get_stocks, get_total_expenses)
+from src.utils import (filter_by_date, get_currencies, get_data_from_user, get_data_from_xlsx,
+                       get_data_via_api_currencies, get_data_via_api_stocks, get_stocks, get_total_expenses)
 
 
 @patch("src.utils.pd.read_excel")
@@ -24,6 +24,28 @@ def test_get_data_from_xlsx_no_such_file(get_empty_df, capsys):
     captured = capsys.readouterr()
     assert captured.out == "Файл не найден. Проверьте правильность введенных данных.\n"
     assert get_data_from_xlsx(file_name).equals(get_empty_df)
+
+
+def test_filter_by_date(get_df, dec_df):
+    """Тестирует нормальную работу функции."""
+    current_month_df = filter_by_date("02.12.2021 00:00:00", get_df).iloc[:, :-1]
+    assert current_month_df.equals(dec_df)
+
+
+@pytest.mark.parametrize(
+    "date",
+    [
+        "31.12.2021",
+        "08-03-2022 15:45:00",
+        "15:45:00",
+        "2022-03-08 17:15:00",
+    ],
+)
+def test_filter_by_date_wrong_date(get_df, get_empty_df, date, capsys):
+    """Тестирует работу функции при передаче неверного формата даты."""
+    assert filter_by_date(date, get_df).equals(get_empty_df)
+    captured = capsys.readouterr()
+    assert captured.out == "Неправильный формат даты. Введите дату в формате DD.MM.YY HH:MM:SS\n"
 
 
 def test_get_total_expenses(get_df):
