@@ -233,3 +233,17 @@ def api_response_stocks() -> list[dict]:
             "type": "stock",
         },
     ]
+
+
+@pytest.fixture
+def monthly_operations() -> dict[str, float]:
+    return {
+        "1112 ": 46207.08,
+        "4556 ": 533948.75,
+        "5091 ": 14918.16,
+        "5441 ": 470854.8,
+        "5507 ": 84000.0,
+        "6002 ": 69200.0,
+        "7197 ": 2417014.58,
+        "nan ": 552941.14,
+    }
