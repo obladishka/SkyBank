@@ -1,7 +1,9 @@
 import tempfile
 from unittest.mock import patch
 
-from src.utils import get_currencies, get_data_from_xlsx
+import pytest
+
+from src.utils import get_currencies, get_data_from_user, get_data_from_xlsx
 
 
 @patch("src.utils.pd.read_excel")
@@ -53,3 +55,54 @@ def test_get_currencies_json_decode_error():
         tmp_file.write(data)
         file_path = tmp_file.name
     assert get_currencies(file_path) == []
+
+
+@pytest.mark.parametrize(
+    "input_currencies, input_stocks, user_currencies, user_stocks",
+    [
+        ("USD,eur CNy, JPY", "aapl,GOOGL tSLA, AMZN", ["USD", "EUR", "CNY", "JPY"], ["AAPL", "GOOGL", "TSLA", "AMZN"]),
+        ("KZt", "aapl,GOOGL tSLA, AMZN", ["KZT"], ["AAPL", "GOOGL", "TSLA", "AMZN"]),
+        ("eur CNy", "msft ", ["EUR", "CNY"], ["MSFT"]),
+    ],
+)
+@patch("src.utils.json.dump")
+@patch("src.utils.open")
+@patch("src.utils.get_stocks")
+@patch("src.utils.get_currencies")
+def test_get_data_from_user(
+    mock_get_currencies,
+    mock_get_stocks,
+    mock_open,
+    mock_json_dump,
+    input_currencies,
+    input_stocks,
+    user_currencies,
+    user_stocks,
+):
+    """Тестирует нормальную работу функции."""
+    mock_get_currencies.return_value = ["USD", "EUR", "CNY", "JPY", "KZT"]
+    mock_get_stocks.return_value = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
+    get_data_from_user(input_currencies, input_stocks)
+    mock_open.assert_called_once_with(
+        "C:\\Users\\user\\Desktop\\python\\python_work\\Course_3\\SkyBank\\user_settings.json", "w", encoding="utf-8"
+    )
+    mock_json_dump.assert_called_with(
+        {"user_currencies": user_currencies, "user_stocks": user_stocks}, mock_open().__enter__()
+    )
+
+
+@pytest.mark.parametrize(
+    "input_currencies, input_stocks",
+    [
+        ("wrong_currency", "aapl,GOOGL tSLA, AMZN"),
+        ("USD,eur CNy, JPY", "wrong_symbol"),
+        ("byr", "tmos, MCX"),
+    ],
+)
+@patch("src.utils.get_stocks")
+@patch("src.utils.get_currencies")
+def test_get_data_from_user_wrong_data(mock_get_currencies, mock_get_stocks, input_currencies, input_stocks):
+    """Тестирует работу функции при вводе несуществующих валют или тикеров, не входящих в S&P 500."""
+    mock_get_currencies.return_value = ["USD", "EUR", "CNY", "JPY", "KZT"]
+    mock_get_stocks.return_value = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
+    assert get_data_from_user(input_currencies, input_stocks) == "Проверьте правильность введенных данных."
