@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 import requests
+from dotenv import load_dotenv
 
 
 def get_data_from_xlsx(file_path: str) -> pd.DataFrame | None:
@@ -95,6 +96,27 @@ def get_data_via_api_currencies(currencies: list[str]) -> tuple:
             currencies_data = response.json()["Valute"]
             currencies_rates = [currencies_data.get(currency, {}).get("Value") for currency in currencies]
             return True, list(map(lambda x: round(x, 2), currencies_rates))
+
+        return False, str(response.reason)
+
+    except requests.exceptions.RequestException as ex:
+        return False, str(ex)
+
+
+def get_data_via_api_stocks(stocks: list[str]) -> tuple:
+    """Функция для получения текущего курса валют."""
+    load_dotenv()
+
+    url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={os.getenv("API_KEY")}"
+
+    try:
+        response = requests.get(url)
+        status_code = response.status_code
+
+        if status_code == 200:
+            stocks_data = response.json()
+            stocks_prices = [i.get("price") for i in stocks_data for stock in stocks if i.get("symbol") == stock]
+            return True, stocks_prices
 
         return False, str(response.reason)
 
