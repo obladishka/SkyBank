@@ -108,3 +108,59 @@ def stocks() -> list[dict[str, str]]:
         {"company": "Microsoft Corp", "tickerSymbol": "MSFT"},
         {"company": "Tesla Inc", "tickerSymbol": "TSLA"},
     ]
+
+
+@pytest.fixture
+def api_response_currencies() -> dict:
+    return {
+        "Date": "2024-08-10T11:30:00+03:00",
+        "PreviousDate": "2024-08-09T11:30:00+03:00",
+        "Timestamp": "2024-08-10T12:00:00+03:00",
+        "Valute": {
+            "USD": {
+                "ID": "R01235",
+                "NumCode": "840",
+                "CharCode": "USD",
+                "Nominal": 1,
+                "Name": "Доллар США",
+                "Value": 87.992,
+                "Previous": 86.5621,
+            },
+            "EUR": {
+                "ID": "R01239",
+                "NumCode": "978",
+                "CharCode": "EUR",
+                "Nominal": 1,
+                "Name": "Евро",
+                "Value": 95.1844,
+                "Previous": 94.1333,
+            },
+            "CNY": {
+                "ID": "R01375",
+                "NumCode": "156",
+                "CharCode": "CNY",
+                "Nominal": 1,
+                "Name": "Китайский юань",
+                "Value": 11.8911,
+                "Previous": 11.8664,
+            },
+            "KZT": {
+                "ID": "R01335",
+                "NumCode": "398",
+                "CharCode": "KZT",
+                "Nominal": 100,
+                "Name": "Казахстанских тенге",
+                "Value": 18.4415,
+                "Previous": 18.1998,
+            },
+            "JPY": {
+                "ID": "R01820",
+                "NumCode": "392",
+                "CharCode": "JPY",
+                "Nominal": 100,
+                "Name": "Японских иен",
+                "Value": 59.6394,
+                "Previous": 59.2688,
+            },
+        },
+    }
