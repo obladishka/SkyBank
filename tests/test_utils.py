@@ -5,7 +5,8 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from src.utils import get_currencies, get_data_from_user, get_data_from_xlsx, get_data_via_api_currencies, get_stocks
+from src.utils import (get_currencies, get_data_from_user, get_data_from_xlsx, get_data_via_api_currencies,
+                       get_data_via_api_stocks, get_stocks)
 
 
 @patch("src.utils.pd.read_excel")
@@ -158,4 +159,29 @@ def test_get_data_via_api_currencies_request_error():
     """Тестирует работу функции при возникновении ошибки."""
     with mock.patch("requests.get", side_effect=requests.exceptions.RequestException("Something went wrong")):
         result = get_data_via_api_currencies(["USD", "EUR", "CNY", "JPY", "KZT"])
+    assert result == (False, "Something went wrong")
+
+
+@patch("src.utils.requests.get")
+def test_get_data_via_api_stocks(mock_get, api_response_stocks):
+    """Тестирует нормальную работу функции."""
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = api_response_stocks
+    result = get_data_via_api_stocks(["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"])
+    assert result == (True, [216.24, 166.94, 163.67, 406.02, 200])
+
+
+@patch("src.utils.requests.get")
+def test_get_data_via_api_stocks_denied_access(mock_get):
+    """Тестирует работу функции, когда доступ был запрещен."""
+    mock_get.return_value.status_code = 401
+    mock_get.return_value.reason = "Unauthorized"
+    result = get_data_via_api_stocks(["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"])
+    assert result == (False, "Unauthorized")
+
+
+def test_get_data_via_api_stocks_request_error():
+    """Тестирует работу функции при возникновении ошибки."""
+    with mock.patch("requests.get", side_effect=requests.exceptions.RequestException("Something went wrong")):
+        result = get_data_via_api_stocks(["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"])
     assert result == (False, "Something went wrong")
