@@ -5,14 +5,8 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from src.utils import (
-    get_currencies,
-    get_data_from_user,
-    get_data_from_xlsx,
-    get_data_via_api_currencies,
-    get_data_via_api_stocks,
-    get_stocks,
-)
+from src.utils import (get_currencies, get_data_from_user, get_data_from_xlsx, get_data_via_api_currencies,
+                       get_data_via_api_stocks, get_stocks, get_total_expenses)
 
 
 @patch("src.utils.pd.read_excel")
@@ -30,6 +24,16 @@ def test_get_data_from_xlsx_no_such_file(get_empty_df, capsys):
     captured = capsys.readouterr()
     assert captured.out == "Файл не найден. Проверьте правильность введенных данных.\n"
     assert get_data_from_xlsx(file_name).equals(get_empty_df)
+
+
+def test_get_total_expenses(get_df):
+    """Тестирует нормальную работу функции."""
+    assert get_total_expenses(get_df) == {"4556": 1267.80, "7197": 99.00}
+
+
+def test_get_total_expenses_empty_df(get_empty_df):
+    """Тестирует работу функции при отсутствии данных."""
+    assert get_total_expenses(get_empty_df) == {"nan": 0.0}
 
 
 @patch("src.utils.json.load")
