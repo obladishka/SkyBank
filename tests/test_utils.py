@@ -5,8 +5,14 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from src.utils import (get_currencies, get_data_from_user, get_data_from_xlsx, get_data_via_api_currencies,
-                       get_data_via_api_stocks, get_stocks)
+from src.utils import (
+    get_currencies,
+    get_data_from_user,
+    get_data_from_xlsx,
+    get_data_via_api_currencies,
+    get_data_via_api_stocks,
+    get_stocks,
+)
 
 
 @patch("src.utils.pd.read_excel")
@@ -118,6 +124,15 @@ def test_get_data_from_user(
     mock_json_dump.assert_called_with(
         {"user_currencies": user_currencies, "user_stocks": user_stocks}, mock_open().__enter__()
     )
+
+
+@patch("src.utils.get_stocks")
+@patch("src.utils.get_currencies")
+def test_get_data_from_user_logger_messages(mock_get_currencies, mock_get_stocks, caplog):
+    mock_get_currencies.return_value = []
+    mock_get_stocks.return_value = []
+    get_data_from_user("USD,eur CNy, JPY", "aapl,GOOGL tSLA, AMZN")
+    assert "Failed to get data about codes and symbols" in caplog.messages
 
 
 @pytest.mark.parametrize(
