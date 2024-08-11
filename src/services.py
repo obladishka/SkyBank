@@ -58,4 +58,4 @@ def round_to_limit(amount: float, limit: int) -> float:
         print("Указан неверный лимит. Выберите лимит из возможных вариантов: 10, 50, 100")
         return 0.0
     logger.info("Returning result")
-    return limit - amount % limit
+    return limit - round(abs(amount) % limit, 2) if abs(amount) % limit != 0 else 0.0
