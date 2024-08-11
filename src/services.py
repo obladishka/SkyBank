@@ -34,3 +34,17 @@ def get_transactions_list(df: pd.DataFrame) -> list[dict[str, Any]]:
     except Exception as ex:
         logger.error(ex)
         return []
+
+
+def filter_by_month(month: str, transactions_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Функция для фильтрации транзакций по месяцу."""
+    try:
+        logger.info("Checking if input data is correct")
+        datetime.strptime(month, "%Y-%m")
+    except ValueError as ex:
+        logger.error(ex)
+        print("Неправильный формат даты. Введите дату в формате YYYY-MM")
+        return []
+    else:
+        logger.info("Successful operation. Returning filtered list.")
+        return [transaction for transaction in transactions_list if transaction.get("Дата операции")[:7] == month]
