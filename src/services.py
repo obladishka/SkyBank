@@ -48,3 +48,14 @@ def filter_by_month(month: str, transactions_list: list[dict[str, Any]]) -> list
     else:
         logger.info("Successful operation. Returning filtered list.")
         return [transaction for transaction in transactions_list if transaction.get("Дата операции")[:7] == month]
+
+
+def round_to_limit(amount: float, limit: int) -> float:
+    """Функция для округления суммы до заданного лимита."""
+    logger.info(f"Checking if input data {amount}, {limit} is correct")
+    if limit not in [10, 50, 100]:
+        logger.warning(f"Incorrect limit: {limit}")
+        print("Указан неверный лимит. Выберите лимит из возможных вариантов: 10, 50, 100")
+        return 0.0
+    logger.info("Returning result")
+    return limit - amount % limit
