@@ -6,7 +6,8 @@ import pytest
 import requests
 
 from src.utils import (calculate_cashback, filter_by_date, get_currencies, get_data_from_user, get_data_from_xlsx,
-                       get_data_via_api_currencies, get_data_via_api_stocks, get_stocks, get_total_expenses)
+                       get_data_via_api_currencies, get_data_via_api_stocks, get_stocks, get_total_expenses,
+                       sort_by_amount)
 
 
 @patch("src.utils.pd.read_excel")
@@ -46,6 +47,28 @@ def test_filter_by_date_wrong_date(get_df, get_empty_df, date, capsys):
     assert filter_by_date(date, get_df).equals(get_empty_df)
     captured = capsys.readouterr()
     assert captured.out == "Неправильный формат даты. Введите дату в формате DD.MM.YY HH:MM:SS\n"
+
+
+def test_sort_by_amount(get_df):
+    """Тестирует нормальную работу функции."""
+    assert sort_by_amount(get_df)[0] == {
+        "Дата операции": "31.01.2018 20:09:33",
+        "Дата платежа": "02.02.2018",
+        "Номер карты": "*4556",
+        "Статус": "OK",
+        "Сумма операции": -1212.8,
+        "Валюта операции": "RUB",
+        "Сумма платежа": -1212.8,
+        "Валюта платежа": "RUB",
+        "Кэшбэк": 12.0,
+        "Категория": "Ж/д билеты",
+        "MCC": 4112.0,
+        "Описание": "РЖД",
+        "Бонусы (включая кэшбэк)": 12.0,
+        "Округление на инвесткопилку": 0.0,
+        "Сумма операции с округлением": 1212.8,
+        "Correct sum": 1212.8,
+    }
 
 
 def test_get_total_expenses(get_df):
