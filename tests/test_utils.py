@@ -6,8 +6,8 @@ import pytest
 import requests
 
 from src.utils import (calculate_cashback, filter_by_date, get_currencies, get_data_from_user, get_data_from_xlsx,
-                       get_data_via_api_currencies, get_data_via_api_stocks, get_stocks, get_total_expenses,
-                       process_cards_info, say_hello, sort_by_amount)
+                       get_data_via_api_currencies, get_data_via_api_stocks, get_exchange_rates, get_stocks,
+                       get_total_expenses, process_cards_info, say_hello, sort_by_amount)
 
 
 @patch("src.utils.pd.read_excel")
@@ -308,3 +308,21 @@ def test_get_data_via_api_stocks_request_error():
     with mock.patch("requests.get", side_effect=requests.exceptions.RequestException("Something went wrong")):
         result = get_data_via_api_stocks(["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"])
     assert result == (False, "Something went wrong")
+
+
+@patch("src.utils.get_data_via_api_currencies")
+def test_get_exchange_rates(mock_get_currencies):
+    """Тестирует нормальную работу функции."""
+    mock_get_currencies.return_value = (True, [87.99, 95.18, 11.89, 59.64, 18.44])
+    assert get_exchange_rates(["USD", "EUR", "CNY", "JPY", "KZT"])[:2] == [
+        {"currency": "USD", "rate": 87.99},
+        {"currency": "EUR", "rate": 95.18},
+    ]
+
+
+@pytest.mark.parametrize("return_status, return_result", [(False, "Forbidden"), (False, "Something went wrong")])
+@patch("src.utils.get_data_via_api_currencies")
+def test_get_exchange_rates_unsuccessful_operation(mock_get_currencies, return_status, return_result):
+    """Тестирует работу функции при неудачной попытке получить данные через API."""
+    mock_get_currencies.return_value = (return_status, return_result)
+    assert get_exchange_rates(["USD", "EUR", "CNY", "JPY", "KZT"]) is None
