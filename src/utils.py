@@ -84,7 +84,7 @@ def filter_by_date(current_date: str, df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(data)
 
 
-def sort_by_amount(df: pd.DataFrame) -> dict:
+def sort_by_amount(df: pd.DataFrame) -> list[dict]:
     """Функция для сортировки транзакций по сумме платежа."""
     df_copy = df.loc[::]
     logger.info("Formating transactions sum to abs number")
@@ -128,13 +128,8 @@ def say_hello(time: int) -> str:
     return "Неверно указано время. Проверьте правильность введенных данных."
 
 
-def process_cards_info(date: str, file_path: str) -> list[dict]:
+def process_cards_info(operations_dict: dict) -> list[dict]:
     """Функция для вывода информации по каждой карте."""
-
-    all_operations = get_data_from_xlsx(file_path)
-    current_month_operations = filter_by_date(date, all_operations)
-    current_month_expenses = get_total_expenses(current_month_operations)
-    operations_dict = calculate_cashback(current_month_expenses)
 
     cards = [key for key in operations_dict.keys() if key != "nan"]
     return [

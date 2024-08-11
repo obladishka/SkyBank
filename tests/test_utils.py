@@ -7,7 +7,7 @@ import requests
 
 from src.utils import (calculate_cashback, filter_by_date, get_currencies, get_data_from_user, get_data_from_xlsx,
                        get_data_via_api_currencies, get_data_via_api_stocks, get_stocks, get_total_expenses,
-                       sort_by_amount, process_cards_info, say_hello)
+                       process_cards_info, say_hello, sort_by_amount)
 
 
 @patch("src.utils.pd.read_excel")
@@ -114,19 +114,9 @@ def test_say_hello_wrong_time():
     assert say_hello(24) == "Неверно указано время. Проверьте правильность введенных данных."
 
 
-@patch("src.utils.calculate_cashback")
-@patch("src.utils.get_total_expenses")
-@patch("src.utils.filter_by_date")
-@patch("src.utils.get_data_from_xlsx")
-def test_process_cards_info(
-    mock_get_df, mock_filter_df, mock_total_expenses, mock_cashback, get_df, monthly_operations, cashback
-):
+def test_process_cards_info(cashback):
     """Тестирует нормальную работу функции."""
-    mock_get_df.return_value = get_df
-    mock_filter_df.return_value = get_df
-    mock_total_expenses.return_value = monthly_operations
-    mock_cashback.return_value = cashback
-    assert process_cards_info("30.11.2021 18:19:28", "existing.xlsx")[:3] == [
+    assert process_cards_info(cashback)[:3] == [
         {
             "last_digits": "1112",
             "total_spent": 46207.08,
@@ -143,34 +133,11 @@ def test_process_cards_info(
             "cashback": 149.18,
         },
     ]
-    mock_get_df.assert_called_once_with("existing.xlsx")
-    mock_filter_df.assert_called_once_with("30.11.2021 18:19:28", get_df)
 
 
-@pytest.mark.parametrize(
-    "date, file",
-    [
-        ("30.11.2021 18:19:28", "no_such_file.xlsx"),
-        ("30.11.2021", "existing.xlsx"),
-        ("08-03-2022 15:45:00", "existing.xlsx"),
-        ("08-03-2022 15:45:00", "no_such_file.xlsx"),
-    ],
-)
-@patch("src.utils.calculate_cashback")
-@patch("src.utils.get_total_expenses")
-@patch("src.utils.filter_by_date")
-@patch("src.utils.get_data_from_xlsx")
-def test_process_cards_info_empty_data(
-    mock_get_df, mock_filter_df, mock_total_expenses, mock_cashback, get_empty_df, date, file
-):
-    """Тестирует работу функции, когда переданы неверные входные данные."""
-    mock_get_df.return_value = get_empty_df
-    mock_filter_df.return_value = get_empty_df
-    mock_total_expenses.return_value = {"nan": 0.0}
-    mock_cashback.return_value = {"nan": [0.0, 0.0]}
-    assert process_cards_info(date, file) == []
-    mock_get_df.assert_called_once_with(file)
-    mock_filter_df.assert_called_once_with(date, get_empty_df)
+def test_process_cards_info_empty_data():
+    """Тестирует работу функции, когда отсутствуют входные данные."""
+    assert process_cards_info({"nan": [0.0, 0.0]}) == []
 
 
 @patch("src.utils.json.load")
