@@ -1,6 +1,6 @@
 import pytest
 
-from src.services import filter_by_month, get_transactions_list
+from src.services import filter_by_month, get_transactions_list, round_to_limit
 
 
 def test_get_transactions_list(get_df):
@@ -33,3 +33,30 @@ def test_filter_by_month_wrong_date(date, transactions_list, capsys):
 def test_filter_by_month_empty_list():
     """Тестирует работу функции при пустом списке транзакций."""
     assert filter_by_month("2021-12", []) == []
+
+
+@pytest.mark.parametrize(
+    "amount, limit, expected",
+    [
+        (-160.89, 10, 9.11),
+        (-160.89, 50, 39.11),
+        (-64.0, 10, 6.0),
+        (-64.0, 100, 36.0),
+        (-103.0, 10, 7.0),
+        (-103.0, 50, 47.0),
+        (-103.0, 100, 97.0),
+        (500.0, 10, 0.0),
+        (500.0, 50, 0.0),
+        (500.0, 100, 0.0),
+    ],
+)
+def test_round_to_limit(amount, limit, expected):
+    """Тестирует нормальную работу функции с различными входными данными."""
+    assert round_to_limit(amount, limit) == expected
+
+
+def test_round_to_limit_incorrect_limit(capsys):
+    """Тестирует работу функции, когда неверно указан лимит."""
+    assert round_to_limit(500.0, 45) == 0.0
+    captured = capsys.readouterr()
+    assert captured.out == "Указан неверный лимит. Выберите лимит из возможных вариантов: 10, 50, 100\n"
