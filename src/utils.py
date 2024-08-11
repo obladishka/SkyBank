@@ -259,7 +259,7 @@ def get_data_via_api_currencies(currencies: list[str]) -> tuple:
 
 
 def get_data_via_api_stocks(stocks: list[str]) -> tuple:
-    """Функция для получения текущего курса валют."""
+    """Функция для получения текущей стоимости акций S&P 500."""
     load_dotenv()
 
     url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={os.getenv("API_KEY")}"
@@ -282,3 +282,10 @@ def get_data_via_api_stocks(stocks: list[str]) -> tuple:
     except requests.exceptions.RequestException as ex:
         logger.error(ex)
         return False, str(ex)
+
+
+def get_exchange_rates(currencies: list[str]) -> list[dict]:
+    """Функция для вывода курса валют."""
+    status, rates = get_data_via_api_currencies(currencies)
+    if status:
+        return [{"currency": currencies[i], "rate": rates[i]} for i in range(len(currencies))]
