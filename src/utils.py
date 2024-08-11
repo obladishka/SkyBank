@@ -84,6 +84,17 @@ def filter_by_date(current_date: str, df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(data)
 
 
+def sort_by_amount(df: pd.DataFrame) -> dict:
+    """Функция для сортировки транзакций по сумме платежа."""
+    df_copy = df.loc[::]
+    logger.info("Formating transactions sum to abs number")
+    df_copy["Correct sum"] = df_copy["Сумма операции"].map(lambda x: -x if x < 0 else x)
+    logger.info("Sorting by abs transactions sum in descending order")
+    sorted_by_expenses_desc = df_copy.sort_values(by="Correct sum", ascending=False)
+    logger.info("Returning result in a form of dict")
+    return sorted_by_expenses_desc.to_dict(orient="records")
+
+
 def get_total_expenses(df: pd.DataFrame) -> dict[str, float]:
     """Функция для получения общей суммы расходов по каждой карте."""
     df_copy = df.loc[::]
