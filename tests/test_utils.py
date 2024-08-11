@@ -6,8 +6,8 @@ import pytest
 import requests
 
 from src.utils import (calculate_cashback, filter_by_date, get_currencies, get_data_from_user, get_data_from_xlsx,
-                       get_data_via_api_currencies, get_data_via_api_stocks, get_exchange_rates, get_stocks,
-                       get_total_expenses, process_cards_info, say_hello, sort_by_amount)
+                       get_data_via_api_currencies, get_data_via_api_stocks, get_exchange_rates, get_stock_prices,
+                       get_stocks, get_total_expenses, process_cards_info, say_hello, sort_by_amount)
 
 
 @patch("src.utils.pd.read_excel")
@@ -326,3 +326,20 @@ def test_get_exchange_rates_unsuccessful_operation(mock_get_currencies, return_s
     """Тестирует работу функции при неудачной попытке получить данные через API."""
     mock_get_currencies.return_value = (return_status, return_result)
     assert get_exchange_rates(["USD", "EUR", "CNY", "JPY", "KZT"]) is None
+
+
+@patch("src.utils.get_data_via_api_stocks")
+def test_get_stock_prices(mock_get_stocks):
+    """Тестирует нормальную работу функции."""
+    mock_get_stocks.return_value = (True, [216.24, 166.94, 163.67, 406.02, 200])
+    assert get_stock_prices(["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"])[:2] == [
+        {"stock": "AAPL", "price": 216.24},
+        {"stock": "AMZN", "price": 166.94},
+    ]
+
+
+@pytest.mark.parametrize("return_status, return_result", [(False, "Unauthorized"), (False, "Something went wrong")])
+@patch("src.utils.get_data_via_api_stocks")
+def test_get_stock_prices_unsuccessful_operation(mock_get_stocks, return_status, return_result):
+    mock_get_stocks.return_value = (return_status, return_result)
+    assert get_stock_prices(["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]) is None
