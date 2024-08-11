@@ -7,7 +7,8 @@ import requests
 
 from src.utils import (calculate_cashback, filter_by_date, get_currencies, get_data_from_user, get_data_from_xlsx,
                        get_data_via_api_currencies, get_data_via_api_stocks, get_exchange_rates, get_stock_prices,
-                       get_stocks, get_total_expenses, process_cards_info, say_hello, sort_by_amount)
+                       get_stocks, get_top_five_transactions, get_total_expenses, process_cards_info, say_hello,
+                       sort_by_amount)
 
 
 @patch("src.utils.pd.read_excel")
@@ -53,7 +54,7 @@ def test_sort_by_amount(get_df):
     """Тестирует нормальную работу функции."""
     assert sort_by_amount(get_df)[0] == {
         "Дата операции": "31.01.2018 20:09:33",
-        "Дата платежа": "02.02.2018",
+        "Дата платежа": "31.01.2018",
         "Номер карты": "*4556",
         "Статус": "OK",
         "Сумма операции": -1212.8,
@@ -138,6 +139,24 @@ def test_process_cards_info(cashback):
 def test_process_cards_info_empty_data():
     """Тестирует работу функции, когда отсутствуют входные данные."""
     assert process_cards_info({"nan": [0.0, 0.0]}) == []
+
+
+def test_get_top_five_transactions(get_df):
+    transactions_list = sort_by_amount(get_df)
+    assert get_top_five_transactions(transactions_list)[:2] == [
+        {
+            "date": "31.01.2018",
+            "amount": -1212.80,
+            "category": "Ж/д билеты",
+            "description": "РЖД",
+        },
+        {
+            "date": "01.12.2021",
+            "amount": -99.00,
+            "category": "Фастфуд",
+            "description": "IP Yakubovskaya M.V.",
+        },
+    ]
 
 
 @patch("src.utils.json.load")
