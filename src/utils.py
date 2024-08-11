@@ -286,6 +286,17 @@ def get_data_via_api_stocks(stocks: list[str]) -> tuple:
 
 def get_exchange_rates(currencies: list[str]) -> list[dict]:
     """Функция для вывода курса валют."""
+    logger.info("Trying to get currencies rates.")
     status, rates = get_data_via_api_currencies(currencies)
     if status:
+        logger.info("Successful operation. Returning formated data")
         return [{"currency": currencies[i], "rate": rates[i]} for i in range(len(currencies))]
+
+
+def get_stock_prices(stocks: list[str]) -> list[dict]:
+    """Функция для вывода цен акций компаний S&P 500."""
+    logger.info("Trying to get stocks prices.")
+    status, prices = get_data_via_api_stocks(stocks)
+    if status:
+        logger.info("Successful operation. Returning formated data")
+        return [{"stock": stocks[i], "price": prices[i]} for i in range(len(stocks))]
