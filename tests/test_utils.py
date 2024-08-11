@@ -58,18 +58,14 @@ def test_get_total_expenses_empty_df(get_empty_df):
     assert get_total_expenses(get_empty_df) == {"nan": 0.0}
 
 
-def test_calculate_cashback(monthly_operations):
+def test_calculate_cashback(monthly_operations, cashback):
     """Тестирует нормальную работу функции."""
-    assert calculate_cashback(monthly_operations) == {
-        "1112 ": [46207.08, 462.07],
-        "4556 ": [533948.75, 5339.49],
-        "5091 ": [14918.16, 149.18],
-        "5441 ": [470854.8, 4708.55],
-        "5507 ": [84000.0, 840.0],
-        "6002 ": [69200.0, 692.0],
-        "7197 ": [2417014.58, 24170.15],
-        "nan ": [552941.14, 5529.41],
-    }
+    assert calculate_cashback(monthly_operations) == cashback
+
+
+def test_calculate_cashback_zero_expenses():
+    """Тестирует работу функции, когда отсутствуют данные по операциям."""
+    assert calculate_cashback({"nan": 0.0}) == {"nan": [0.0, 0.0]}
 
 
 @patch("src.utils.json.load")
