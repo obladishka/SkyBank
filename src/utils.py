@@ -119,19 +119,23 @@ def calculate_cashback(operations_dict: dict) -> dict:
 
 def say_hello(time: int) -> str:
     """Функция для вывода приветствия в зависимости от текущего времени."""
+    logger.info(f"Checking time validity {time}")
     if 0 <= time <= 23:
+        logger.info("Time is valid. Returning greeting")
         return (
             "Доброй ночи"
             if 0 <= time < 5
             else "Доброе утро" if 5 <= time < 12 else "Добрый день" if 12 <= time < 18 else "Добрый вечер"
         )
+    logger.warning(f"Time {time} is invalid")
     return "Неверно указано время. Проверьте правильность введенных данных."
 
 
 def process_cards_info(operations_dict: dict) -> list[dict]:
     """Функция для вывода информации по каждой карте."""
-
+    logger.info("Filtering valid card numbers")
     cards = [key for key in operations_dict.keys() if key != "nan"]
+    logger.info("Returning reformatted result")
     return [
         {
             "last_digits": card,
@@ -139,6 +143,20 @@ def process_cards_info(operations_dict: dict) -> list[dict]:
             "cashback": operations_dict.get(card)[1],
         }
         for card in cards
+    ]
+
+
+def get_top_five_transactions(transactions_list: list[dict]) -> list[dict]:
+    """Функция для вывода топ-5 транзакций по сумме платежа."""
+    logger.info("Formatting result")
+    return [
+        {
+            "date": transaction.get("Дата платежа"),
+            "amount": transaction.get("Сумма платежа"),
+            "category": transaction.get("Категория"),
+            "description": transaction.get("Описание"),
+        }
+        for transaction in transactions_list[:5]
     ]
 
 
