@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from datetime import datetime
@@ -59,3 +60,12 @@ def round_to_limit(amount: float, limit: int) -> float:
         return 0.0
     logger.info("Returning result")
     return limit - round(abs(amount) % limit, 2) if abs(amount) % limit != 0 else 0.0
+
+
+def investment_bank(month: str, transactions: list[dict[str, Any]], limit: int) -> str:
+    """Основная функция, отдающая JSON-ответ с суммой, которую удалось бы отложить в «Инвесткопилку»."""
+    filtered_transactions = filter_by_month(month, transactions)
+    if filtered_transactions:
+        amounts = [transaction.get("Сумма операции") for transaction in filtered_transactions]
+        result = {"month": month, "investment_amount": sum(round_to_limit(amount, limit) for amount in amounts)}
+        return json.dumps(result)
