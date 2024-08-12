@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -274,3 +276,47 @@ def transactions_list() -> list[dict]:
         {"Дата операции": "2021-11-30", "Сумма операции": -41.0},
         {"Дата операции": "2021-11-29", "Сумма операции": 500.0},
     ]
+
+
+@pytest.fixture
+def json_response() -> str:
+    data = {
+        "greeting": "Добрый день",
+        "cards": [
+            {
+                "last_digits": "1112",
+                "total_spent": 46207.08,
+                "cashback": 462.07,
+            },
+            {
+                "last_digits": "4556",
+                "total_spent": 533948.75,
+                "cashback": 5339.49,
+            },
+            {
+                "last_digits": "5091",
+                "total_spent": 14918.16,
+                "cashback": 149.18,
+            },
+        ],
+        "top_transactions": [
+            {
+                "date": "31.01.2018",
+                "amount": -1212.80,
+                "category": "Ж/д билеты",
+                "description": "РЖД",
+            },
+            {
+                "date": "01.12.2021",
+                "amount": -99.00,
+                "category": "Фастфуд",
+                "description": "IP Yakubovskaya M.V.",
+            },
+        ],
+        "currency_rates": [{"currency": "USD", "rate": 87.99}, {"currency": "EUR", "rate": 95.18}],
+        "stock_prices": [
+            {"stock": "AAPL", "price": 216.24},
+            {"stock": "AMZN", "price": 166.94},
+        ],
+    }
+    return json.dumps(data, ensure_ascii=False, indent=4)
