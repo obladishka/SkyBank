@@ -1,6 +1,8 @@
+import json
+
 import pytest
 
-from src.services import filter_by_month, get_transactions_list, round_to_limit
+from src.services import filter_by_month, get_transactions_list, investment_bank, round_to_limit
 
 
 def test_get_transactions_list(get_df):
@@ -60,3 +62,43 @@ def test_round_to_limit_incorrect_limit(capsys):
     assert round_to_limit(500.0, 45) == 0.0
     captured = capsys.readouterr()
     assert captured.out == "Указан неверный лимит. Выберите лимит из возможных вариантов: 10, 50, 100\n"
+
+
+@pytest.mark.parametrize(
+    "month, limit, expected",
+    [
+        ("2021-12", 10, 15.11),
+        ("2021-12", 50, 75.11),
+        ("2021-12", 100, 75.11),
+        ("2021-11", 10, 24.5),
+        ("2021-11", 50, 104.5),
+        ("2021-11", 100, 204.5),
+    ],
+)
+def test_investment_bank(month, limit, expected, transactions_list):
+    """Тестирует нормальную работу функции с различными входными данными."""
+    assert investment_bank(month, transactions_list, limit) == json.dumps(
+        {"month": month, "investment_amount": expected}
+    )
+
+
+@pytest.mark.parametrize(
+    "limit, expected",
+    [
+        (10, None),
+        (50, None),
+        (100, None),
+    ],
+)
+def test_investment_bank_no_transactions(transactions_list, limit, expected):
+    """Тестирует работу функции, когда транзакции не найдены."""
+    assert investment_bank("2021-10", transactions_list, limit) is expected
+
+
+def test_investment_bank_wrong_limit(transactions_list, capsys):
+    """Тестирует работу функции, когда транзакции не найдены."""
+    assert investment_bank("2021-11", transactions_list, 25) == json.dumps(
+        {"month": "2021-11", "investment_amount": 0.0}
+    )
+    captured = capsys.readouterr()
+    assert "Указан неверный лимит. Выберите лимит из возможных вариантов: 10, 50, 100\n" in captured.out
