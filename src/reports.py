@@ -39,7 +39,7 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
             logger.info("Trying to serialize results")
             return json.dumps(result, ensure_ascii=False, indent=4)
 
-        except json.JSONDecodeError as ex:
+        except Exception as ex:
             logger.error(ex)
 
     except ValueError as ex:
