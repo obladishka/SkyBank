@@ -30,7 +30,7 @@ def write_to_file(my_file: str = None) -> Any:
 
             result = func(*args, **kwargs)
 
-            if not my_file:
+            if not my_file or my_file[-4:] == "json":
                 file_name = os.path.join(file_path, "report.json")
                 with open(file_name, "w", encoding="utf-8") as output_file:
                     new_result = json.loads(result)
