@@ -2,11 +2,13 @@ import json
 import os
 from datetime import datetime
 
-from src.utils import (calculate_cashback, filter_by_date, get_data_from_xlsx, get_exchange_rates, get_stock_prices,
+import pandas as pd
+
+from src.utils import (calculate_cashback, filter_by_date, get_exchange_rates, get_stock_prices,
                        get_top_five_transactions, get_total_expenses, process_cards_info, say_hello, sort_by_amount)
 
 
-def generate_json_response(date: str) -> str:
+def generate_json_response(date: str, df: pd.DataFrame) -> str:
     """Основная функция для страницы Главная."""
 
     file_path = os.path.dirname(os.path.dirname(__file__))
@@ -23,8 +25,7 @@ def generate_json_response(date: str) -> str:
         with open(os.path.join(file_path, "user_settings.json")) as settings_file:
             user_settings = json.load(settings_file)
 
-        all_operations = get_data_from_xlsx(os.path.join(file_path, "data", "operations.xlsx"))
-        current_month_operations = filter_by_date(formated_date, all_operations)
+        current_month_operations = filter_by_date(formated_date, df)
         current_month_expenses = calculate_cashback(get_total_expenses(current_month_operations))
 
         result = {
