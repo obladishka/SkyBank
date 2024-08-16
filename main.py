@@ -40,7 +40,7 @@ def main():
                 )
                 check_input = get_data_from_user(currencies, stocks)
 
-        else:
+        finally:
             user_input = input(
                 """\nВыберите интересующий Вас пункт меню:
 1. Перейти на главную
@@ -54,7 +54,7 @@ def main():
             df = get_data_from_xlsx(os.path.join(base_path, "operations.xlsx"))
 
             if user_input == "1":
-                print(generate_json_response(date))
+                print(generate_json_response(date, df))
 
             elif user_input == "2":
 
