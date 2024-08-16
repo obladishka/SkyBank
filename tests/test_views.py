@@ -3,6 +3,8 @@ from unittest.mock import patch
 from src.views import generate_json_response
 
 
+@patch("os.path.dirname", return_value="/mock/path")
+@patch("os.path.join", side_effect=lambda *args: "/".join(args))
 @patch("src.views.get_stock_prices")
 @patch("src.views.get_exchange_rates")
 @patch("src.views.get_top_five_transactions")
@@ -16,7 +18,10 @@ def test_generate_json_response(
     mock_get_top_five_transactions,
     mock_get_get_exchange_rates,
     mock_get_stock_prices,
+    mock_join,
+    mock_dirname,
     json_response,
+    get_df,
 ):
     """Тестирует нормальную работу функции."""
     mock_json.return_value = {"user_currencies": ["USD", "EUR"], "user_stocks": ["AAPL", "AMZN"]}
@@ -59,14 +64,12 @@ def test_generate_json_response(
         {"stock": "AAPL", "price": 216.24},
         {"stock": "AMZN", "price": 166.94},
     ]
-    assert generate_json_response("2022-03-08 15:45:00") == json_response
-    mock_open.assert_called_once_with(
-        "C:\\Users\\user\\Desktop\\python\\python_work\\Course_3\\SkyBank\\user_settings.json"
-    )
+    assert generate_json_response("2022-03-08 15:45:00", get_df) == json_response
+    mock_open.assert_called_once_with("/mock/path/user_settings.json")
 
 
-def test_generate_json_response_wrong_date(capsys):
+def test_generate_json_response_wrong_date(get_df, capsys):
     """Тестирует работу функции при передаче неверной даты."""
-    assert generate_json_response("31.12.2021 16:44:00") is None
+    assert generate_json_response("31.12.2021 16:44:00", get_df) is None
     captured = capsys.readouterr()
     assert captured.out == "Неправильный формат даты. Введите дату в формате YYYY-MM-DD HH:MM:SS\n"
