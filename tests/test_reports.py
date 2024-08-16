@@ -1,9 +1,9 @@
 import json
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 import pytest
 
-from src.reports import spending_by_category
+from src.reports import spending_by_category, write_to_file
 
 
 def test_spending_by_category(get_df, dec_df):
@@ -40,3 +40,55 @@ def test_spending_by_category_json_dumps_error(mock_df_to_dict, get_df, caplog):
 def test_spending_by_category_no_transactions(get_df):
     """Тестирует работу функции, когда транзакций по заданной категории не найдено."""
     assert spending_by_category(get_df, "Not existing category", "01.12.2021 12:35:05") == "[]"
+
+
+@patch("builtins.open", new_callable=mock_open)
+@patch("os.path.dirname", return_value="/mock/path")
+@patch("os.path.join", side_effect=lambda *args: "/".join(args))
+@patch("src.reports.json.dump")
+def test_write_to_file_json(mock_json, mock_join, mock_dirname, mock_opened):
+    """Тестирует запись данных в JSON-файл."""
+
+    @write_to_file("report.json")
+    def sample_function():
+        return json.dumps({"key": "value"})
+
+    sample_function()
+
+    mock_json.assert_called_once_with(
+        {"key": "value"},
+        mock_opened("/mock/path/data/report.json", "w", encoding="utf-8"),
+        ensure_ascii=False,
+        indent=4,
+    )
+    mock_opened.assert_called_with("/mock/path/data/report.json", "w", encoding="utf-8")
+
+
+@patch("os.path.dirname", return_value="/mock/path")
+@patch("os.path.join", side_effect=lambda *args: "/".join(args))
+@patch("pandas.DataFrame.to_csv")
+def test_write_to_file_csv(mock_to_csv, mock_join, mock_dirname):
+    """Тестирует запись данных в CSV-файл."""
+
+    @write_to_file("report.csv")
+    def sample_function():
+        return json.dumps({"key1": ["value1", "value2"], "key2": ["value3", "value4"]})
+
+    sample_function()
+
+    mock_to_csv.assert_called_once_with("/mock/path/data/report.csv", index=False)
+
+
+@patch("os.path.dirname", return_value="/mock/path")
+@patch("os.path.join", side_effect=lambda *args: "/".join(args))
+@patch("pandas.DataFrame.to_excel")
+def test_write_to_file_excel(mock_to_excel, mock_join, mock_dirname):
+    """Тестирует запись данных в XLSX-файл."""
+
+    @write_to_file("report.xlsx")
+    def sample_function():
+        return json.dumps({"key1": ["value1", "value2"], "key2": ["value3", "value4"]})
+
+    sample_function()
+
+    mock_to_excel.assert_called_once_with("/mock/path/data/report.xlsx", index=False)
